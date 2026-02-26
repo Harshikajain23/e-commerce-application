@@ -1,9 +1,17 @@
-import React from 'react'
+import { useContext } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const ProtectedRoute = () => {
-  return (
-    <div>ProtectedRoute</div>
-  )
-}
+  const { user } = useContext(AuthContext);
+  const location = useLocation(); // get current location
 
-export default ProtectedRoute
+  if (!user) {
+    // Pass the page user wanted in state
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  return <Outlet />;
+};
+
+export default ProtectedRoute;

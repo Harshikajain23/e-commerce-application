@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 const Auth = () => {
@@ -7,6 +7,9 @@ const Auth = () => {
   const [error, setError] = React.useState("");
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const [formData, setFormData] = React.useState({
     name: "",
@@ -65,7 +68,7 @@ const Auth = () => {
     }
 
     login(validUser); // ✅ context handles session
-    navigate("/dashboard");
+    navigate(from, { replace: true });
   };
 
   return (
