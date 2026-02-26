@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 const Auth = () => {
   const [state, setState] = React.useState("login");
@@ -41,7 +42,7 @@ const Auth = () => {
     );
 
     if (userExists) {
-      setError("User already exists");
+      toast.error("User already exists");
       return;
     }
 
@@ -50,7 +51,8 @@ const Auth = () => {
 
     setState("login");
     setFormData({ name: "", email: "", password: "" });
-    alert("Registration successful! Please login.");
+
+    toast.success("Registration successful! Please login.");
   };
 
   const handleLogin = () => {
@@ -63,11 +65,12 @@ const Auth = () => {
     );
 
     if (!validUser) {
-      setError("Invalid email or password");
+      toast.error("Invalid email or password");
       return;
     }
 
-    login(validUser); // ✅ context handles session
+    login(validUser);
+    toast.success(`Welcome back, ${validUser.name}`);
     navigate(from, { replace: true });
   };
 
@@ -84,10 +87,6 @@ const Auth = () => {
         <p className="text-gray-400 text-sm mt-2">
           Please sign in to continue
         </p>
-
-        {error && (
-          <p className="text-red-400 text-sm mt-4">{error}</p>
-        )}
 
         {state !== "login" && (
           <div className="mt-6">

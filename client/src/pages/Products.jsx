@@ -1,43 +1,125 @@
-import { useContext } from "react";
-import Navbar from "../components/Navbar";
+import { useEffect, useState, useContext, useRef } from "react";
 import { CartContext } from "../context/CartContext";
+import toast from "react-hot-toast";
 
 const Products = () => {
   const { addToCart } = useContext(CartContext);
 
-  const products = [
-    { id: 1, name: "Headphones", price: 1999 },
-    { id: 2, name: "Smart Watch", price: 2999 },
-    { id: 3, name: "Laptop", price: 55999 },
-    { id: 4, name: "Mobile Phone", price: 24999 },
-  ];
+  const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [hasMore, setHasMore] = useState(true);
+
+  const observer = useRef();
+
+  // Fetch Products with Pagination
+  const fetchProducts = async () => {
+    if (loading || !hasMore) return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `https://dummyjson.com/products?limit=12&skip=${(page-1) * 12}`
+      );
+      const data = await response.json();
+
+      if (data.products.length === 0) {
+        setHasMore(false);
+      } else {
+        setProducts((prev) => [...prev, ...data.products]);
+      }
+    } catch (err) {
+      setError("Failed to fetch products");
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [page]);
+
+  // Infinite Scroll Logic
+  const lastProductRef = (node) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage((prev) => prev + 1);
+      }
+    });
+
+    if (node) observer.current.observe(node);
+  };
 
   return (
-    <>
-      
-      <div className="min-h-screen bg-gray-950 text-white p-6">
-        <h1 className="text-3xl font-bold mb-8">Products 🛒</h1>
+    <div className="min-h-screen bg-gray-950 text-white p-6">
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        Products
+      </h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+      {error && <p className="text-red-500">{error}</p>}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.map((product, index) => {
+          const isLast = index === products.length - 1;
+
+          return (
             <div
+              ref={isLast ? lastProductRef : null}
               key={product.id}
-              className="bg-gray-900 border border-gray-800 p-6 rounded-2xl"
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-4"
             >
-              <h2 className="text-lg font-semibold">{product.name}</h2>
-              <p className="text-gray-400 mt-2">₹{product.price}</p>
+              <img
+                src={product.thumbnail}
+                alt={product.title}
+                className="w-full h-40 object-cover rounded-lg"
+              />
+
+              <h2 className="mt-4 font-semibold">
+                {product.title}
+              </h2>
+
+              <p className="text-indigo-400 mt-2">
+                ₹{Math.floor(product.price)}
+              </p>
 
               <button
-                onClick={() => addToCart(product)}
-                className="mt-4 w-full bg-indigo-600 hover:bg-indigo-500 transition py-2 rounded-full cursor-pointer"
+                onClick={() =>{
+                  addToCart({
+                    id: product.id,
+                    name: product.title,
+                    price: product.price,
+                    thumbnail: product.thumbnail,
+                  })
+                   toast.success(`${product.title} added to cart 🛒`);
+                }}
+                className="mt-4 w-full bg-indigo-600 py-2 rounded-lg hover:bg-indigo-500 transition"
               >
                 Add to Cart
               </button>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    </>
+
+      {/* Loading Indicator */}
+      {loading && (
+        <p className="text-center mt-6 animate-pulse">
+          Loading more products...
+        </p>
+      )}
+
+      {/* No More Products */}
+      {!hasMore && (
+        <p className="text-center mt-6 text-gray-500">
+          No more products
+        </p>
+      )}
+    </div>
   );
 };
 

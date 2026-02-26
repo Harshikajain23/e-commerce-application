@@ -7,9 +7,14 @@ import Cart from "./pages/Cart";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
+import { Toaster } from "react-hot-toast";
+
 
 function App() {
   return (
+    <>
+    <Toaster position="top-center"/>
+
     <BrowserRouter>
       <Routes>
 
@@ -28,6 +33,7 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
 
